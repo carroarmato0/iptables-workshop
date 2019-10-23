@@ -36,6 +36,12 @@ Vagrant.configure("2") do |config|
     echo "== Updating the OS =="
     yum -y distro-sync
 
+    echo "== Install packages =="
+    yum install -y bind-utils httpd mod_ssl
+
+    echo "== Configure and start services =="
+    systemctl enable httpd && systemctl start httpd
+
     echo "== IPTables: Resetting FILTER table =="
     for CHAIN in 'INPUT' 'FORWARD' 'OUTPUT'; do
       iptables -P $CHAIN ACCEPT;
@@ -60,7 +66,7 @@ Vagrant.configure("2") do |config|
     
     echo "== IPTables: Lockdown the Firewall"
     for CHAIN in 'INPUT' 'FORWARD' 'OUTPUT'; do
-     iptables -P $CHAIN DROP;
+     iptables -A $CHAIN -j REJECT -m comment --comment "Reject all unmatched traffic";
     done
   SHELL
 end
