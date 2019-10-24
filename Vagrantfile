@@ -37,10 +37,19 @@ Vagrant.configure("2") do |config|
     yum -y distro-sync
 
     echo "== Install packages =="
-    yum install -y bind-utils httpd mod_ssl
+    yum install -y bind-utils httpd mod_ssl nmap-ncat
 
     echo "== Configure and start services =="
     systemctl enable httpd && systemctl start httpd
+    echo -e "[Unit]\nDescription=hello\n[Service]\nRestart=always\nExecStart=/usr/bin/nc -l 127.0.0.1 1234 -k -c \'echo \"Woah! You Port-Forwarded to me!\"\'\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/hello.service
+    echo -e "[Unit]\nDescription=server-a\n[Service]\nRestart=always\nExecStart=/usr/bin/nc -l 127.0.0.1 8081 -k -c \'echo \"Hi! I am Server A!\"\'\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/server-a.service
+    echo -e "[Unit]\nDescription=server-b\n[Service]\nRestart=always\nExecStart=/usr/bin/nc -l 127.0.0.1 8082 -k -c \'echo \"Hi! I am Server B!\"\'\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/server-b.service
+    echo -e "[Unit]\nDescription=server-c\n[Service]\nRestart=always\nExecStart=/usr/bin/nc -l 127.0.0.1 8083 -k -c \'echo \"Hi! I am Server C!\"\'\n[Install]\nWantedBy=multi-user.target\n" > /etc/systemd/system/server-c.service
+    systemctl daemon-reload
+    systemctl enable hello    && systemctl start hello
+    systemctl enable server-a && systemctl start server-a
+    systemctl enable server-b && systemctl start server-b
+    systemctl enable server-c && systemctl start server-c
 
     echo "== IPTables: Resetting FILTER table =="
     for CHAIN in 'INPUT' 'FORWARD' 'OUTPUT'; do
